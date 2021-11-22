@@ -1,1 +1,4 @@
 go-fast-book-reader
+*.iml
+.idea/
+
