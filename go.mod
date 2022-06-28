@@ -2,4 +2,4 @@ module github.com/vit1251/go-fast-book-reader
 
 go 1.17
 
-require github.com/veandco/go-sdl2 v0.4.10
+require github.com/veandco/go-sdl2 v0.4.24

@@ -4,18 +4,22 @@ import (
 	"fmt"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
+	"time"
 	"log"
 	"path"
 )
 
 type App struct {
+	reactor     *Reactor
+	startTime   time.Time
+	action      int
 	running     bool
 	surface     *sdl.Surface
 	window      *sdl.Window
 	format      uint32
 	pixelFormat *sdl.PixelFormat
 	fonts       []*Font
-	wasRepaint  bool
+	wantRepaint bool
 	pos         int
 	speed       int
 	reader      *Reader
@@ -35,15 +39,57 @@ var (
 	bookName          string = "example.txt"
 )
 
-func NewApplication() App {
+func NewApplication() *App {
 
 	log.Printf("Start reading speed %+v words per minute", readSpeed)
 
-	return App{
-		running:    false,
-		wasRepaint: true,
-		speed:      readSpeed,
+	app := &App{
+		reactor:     NewReactor(),
+		running:     false,
+		wantRepaint: true,
+		speed:       readSpeed,
+		startTime:   time.Now(),
+		action:      0,
 	}
+
+	/* Monitoring events */
+	app.reactor.CallAt(app.startTime, func() {
+		app.monitorCounter()
+	})
+
+	/* Rendernig timer */
+	var startShowDuration time.Duration = time.Duration(5) * time.Second
+	app.reactor.CallLater(startShowDuration, func() {
+		app.slide()
+	})
+
+	return app
+
+}
+
+func (self *App) slide() {
+	var wordShowDuration time.Duration = time.Duration(60 * 1000 / readSpeed) * time.Millisecond
+	log.Printf("Word %d duration on screen %+v", self.pos, wordShowDuration)
+	//
+	self.pos += 1
+	self.action += 1
+	/* Render screen */
+	self.wantRepaint = true
+	/* Register */
+	self.reactor.CallLater(wordShowDuration, func() {
+		self.slide()
+	})
+}
+
+func (self *App) monitorCounter() {
+	log.Printf("This is reactor CallAt every 1 sec. monitor")
+	log.Printf("Action(s) %d per sec.", self.action)
+	self.action = 0
+	self.startTime = self.startTime.Add(time.Duration(1) * time.Second)
+	log.Printf("Next monitor at %q", self.startTime)
+	self.reactor.CallAt(self.startTime, func() {
+		self.monitorCounter()
+	})
 }
 
 func (self *Font) Close() error {
@@ -59,20 +105,33 @@ func (self *App) ProcessEvent(event sdl.Event) {
 	}
 }
 
+func (self *App) processIteration() {
+
+	/* Step 1. Process iteration */
+	self.reactor.Process()
+
+	/* Step 2. Wait next timer or event handling */
+	var timeout int = 100
+	
+	if self.wantRepaint {
+		timeout = 0
+	}
+	
+	if event := sdl.WaitEventTimeout(timeout); event != nil {
+		self.ProcessEvent(event)
+	}
+
+	if self.wantRepaint {
+		self.Render()
+		self.wantRepaint = false
+	}
+
+}
+
 func (self *App) Run() {
-	/* Step 1. Calculate speed */
-	var timeout int = (1000 * 60) / self.speed
-	/* Step 2. Perform main execution */
 	self.running = true
 	for self.running {
-		if event := sdl.WaitEventTimeout(timeout); event != nil {
-			self.ProcessEvent(event)
-		} else {
-			self.wasRepaint = true
-			self.Render()
-			//			fmt.Printf("Event...")
-			self.pos += 1
-		}
+		self.processIteration()
 	}
 }
 
@@ -205,6 +264,8 @@ func (self *App) Init() error {
 
 func (self *App) Render() {
 
+	log.Printf("Render")
+
 	/* Step 1. Clear background */
 	//var rect sdl.Rect
 	bg := sdl.Color{}
@@ -218,13 +279,12 @@ func (self *App) Render() {
 	self.surface.FillRect(nil /*&rect*/, color)
 
 	/* Step 2. Draw text */
-	//msg := fmt.Sprintf("%d", self.pos)
 	msg := self.reader.Get(self.pos)
+	log.Printf("Show %d is %s", self.pos, msg)
 	self.drawText(self.fonts[0], msg)
 
 	/* Step 3. Update screen buffer */
 	self.window.UpdateSurface()
-	self.wasRepaint = false
 
 }
 
