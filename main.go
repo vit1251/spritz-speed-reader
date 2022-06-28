@@ -23,6 +23,7 @@ type App struct {
 	pos         int
 	speed       int
 	reader      *Reader
+	pause       bool
 }
 
 type Font struct {
@@ -50,6 +51,7 @@ func NewApplication() *App {
 		speed:       readSpeed,
 		startTime:   time.Now(),
 		action:      0,
+		pause:       true,
 	}
 
 	/* Monitoring events */
@@ -58,7 +60,7 @@ func NewApplication() *App {
 	})
 
 	/* Rendernig timer */
-	var startShowDuration time.Duration = time.Duration(5) * time.Second
+	var startShowDuration time.Duration = time.Duration(1) * time.Second
 	app.reactor.CallLater(startShowDuration, func() {
 		app.slide()
 	})
@@ -71,10 +73,11 @@ func (self *App) slide() {
 	var wordShowDuration time.Duration = time.Duration(60 * 1000 / readSpeed) * time.Millisecond
 	log.Printf("Word %d duration on screen %+v", self.pos, wordShowDuration)
 	//
-	self.pos += 1
-	self.action += 1
-	/* Render screen */
-	self.wantRepaint = true
+	if self.pause == false {
+		self.pos += 1
+		self.action += 1
+		self.wantRepaint = true
+	}
 	/* Register */
 	self.reactor.CallLater(wordShowDuration, func() {
 		self.slide()
@@ -97,10 +100,37 @@ func (self *Font) Close() error {
 	return nil
 }
 
+func (self *App) processKeyboardEvent(event sdl.KeyboardEvent) {
+
+	log.Printf("key = %+v", event)
+
+	if event.State == sdl.RELEASED {
+	if (event.Keysym.Scancode == sdl.SCANCODE_ESCAPE) {
+		self.running = false
+	} else if (event.Keysym.Scancode == sdl.SCANCODE_SPACE) {
+		log.Printf("Pause = %q", self.pause)
+		self.pause = !self.pause
+	} else if (event.Keysym.Scancode == sdl.SCANCODE_LEFT) {
+		if self.pos > 0 {
+			self.pos = self.pos - 1
+			self.wantRepaint = true
+		}
+	} else if (event.Keysym.Scancode == sdl.SCANCODE_RIGHT) {
+//		if self.pos ... {
+			self.pos = self.pos + 1
+			self.wantRepaint = true
+//		}
+	}
+	}
+
+}
+
 func (self *App) ProcessEvent(event sdl.Event) {
-	switch event.(type) {
-	case *sdl.QuitEvent:
-		println("Quit")
+
+	if keyboardEvent, ok := event.(*sdl.KeyboardEvent); ok {
+		self.processKeyboardEvent(*keyboardEvent)
+	} else if quitEvent, ok := event.(*sdl.QuitEvent); ok {
+		log.Printf("quit = %+v", quitEvent)
 		self.running = false
 	}
 }

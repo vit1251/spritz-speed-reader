@@ -14,3 +14,11 @@ Execute commands:
 
     # pacman -S sdl2 sdl2_ttf sdl2_image
     # go build .
+
+
+## User interface hot keys
+
+    LEFT - Word before
+    RIGHT - Word later
+    ESC - Quit
+    SPACE - Pause/Continue
