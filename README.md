@@ -1,20 +1,18 @@
-# Fast Book Reader on GOlang
+# Spritz Speed Reader
 
-Fast Book Reader written on Golang under Linux system
+Spritz Speed Reader is Golang reading TXT document application
 
-![Screenshot](/docs/FastBookReader.png)
+![Screenshot](/docs/SpritzSpeedReader.png)
 
-Reading book in plain/text file and show word by word with 240 words per second
-
-This application provide extrimly fast reading text books without images.
+This application provide speed reading text way with Spritz technique.
 
 ## Build source code on ArchLinux
 
 Execute commands:
 
-    # pacman -S sdl2 sdl2_ttf sdl2_image
-    # go build .
-
+    # pacman -S sdl2 sdl2_ttf sdl2_image sdl2_mixer sdl2_gfx
+    # go build ...
+    # go install ...
 
 ## User interface hot keys
 
