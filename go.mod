@@ -1,4 +1,4 @@
-module github.com/vit1251/go-fast-book-reader
+module github.com/vit1251/spritz-speed-reader
 
 go 1.17
 

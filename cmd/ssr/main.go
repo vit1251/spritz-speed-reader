@@ -7,7 +7,7 @@ import (
 	"time"
 	"log"
 	"path"
-	"github.com/vit1251/go-fast-book-reader/internal"
+	"github.com/vit1251/spritz-speed-reader/internal"
 )
 
 type App struct {
