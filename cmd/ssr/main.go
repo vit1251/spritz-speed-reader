@@ -1,4 +1,4 @@
-package main
+package ssr
 
 import (
 	"fmt"
@@ -7,10 +7,11 @@ import (
 	"time"
 	"log"
 	"path"
+	"github.com/vit1251/go-fast-book-reader/internal"
 )
 
 type App struct {
-	reactor     *Reactor
+	reactor     *internal.Reactor
 	startTime   time.Time
 	action      int
 	running     bool
@@ -22,7 +23,7 @@ type App struct {
 	wantRepaint bool
 	pos         int
 	speed       int
-	reader      *Reader
+	reader      *internal.Reader
 	pause       bool
 }
 
@@ -45,7 +46,7 @@ func NewApplication() *App {
 	log.Printf("Start reading speed %+v words per minute", readSpeed)
 
 	app := &App{
-		reactor:     NewReactor(),
+		reactor:     internal.NewReactor(),
 		running:     false,
 		wantRepaint: true,
 		speed:       readSpeed,
@@ -242,7 +243,7 @@ func (self *App) Init() error {
 	var err error
 
 	/* Step 0. Initialize reader */
-	self.reader = NewReader()
+	self.reader = internal.NewReader()
 	err = self.reader.Read(bookName)
 	if err != nil {
 		return err
